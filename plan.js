@@ -267,6 +267,67 @@
     return h;
   }
 
+  /* ---- Moderne Ansicht: Einschätzung, Diagramm, Tempo-Chips, Wochenkarten ---- */
+  function chipFor(s) {
+    var d = s.desc || '';
+    if (s.type === 'S') return ['Z', 'Locker'];
+    if (/^Langer Lauf/.test(d)) return ['L', 'Lang'];
+    if (/^Fahrtspiel/.test(d)) return ['Q', 'Fahrtspiel'];
+    if (/× (1000|2000) m/.test(d)) return ['Q', 'Intervall'];
+    if (/^Tempodauerlauf/.test(d)) return ['T', 'Tempo'];
+    if (/^Renntempo/.test(d)) return ['T', 'Renntempo'];
+    return ['E', 'Locker'];
+  }
+  function dd(d) { return ('0' + d.getDate()).slice(-2) + '.' + ('0' + (d.getMonth() + 1)).slice(-2) + '.'; }
+  var PHC = { 'Grundlage': 'g', 'Aufbau': 'a', 'Spezifisch': 's', 'Tapering': 't' };
+  function renderVerdict(p) {
+    var ck = p.check; if (!ck) return '';
+    var h = '<section class="verdict v' + ck.level + '"><div class="vhead"><span class="vbadge">' + ['Machbar', 'Ambitioniert', 'Sehr ambitioniert', 'Nicht realistisch'][ck.level] + '</span><h3>' + esc(ck.headline) + '</h3></div><ul>';
+    ck.lines.forEach(function (l) { h += '<li>' + esc(l) + '</li>'; });
+    if (ck.noRef && p.interactive) h += '<li class="hint">Mit deiner letzten Bestzeit (oben, optional) prüfe ich ehrlicher, wie weit dein Ziel von deiner heutigen Form entfernt ist.</li>';
+    return h + '</ul></section>';
+  }
+  function renderChart(p) {
+    var W = 720, H = 230, L = 40, R = 10, T = 18, B = 34, n = p.plan.length, ck = p.check, rec = ck ? ck.rec : null;
+    var max = Math.max.apply(null, p.plan.map(function (w) { return w.volume; }).concat(rec ? [rec[1]] : [])) * 1.1;
+    var bw = (W - L - R) / n, s = '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Wochenumfang in Kilometern pro Woche">';
+    var step = max > 80 ? 20 : 10;
+    for (var g = 0; g <= max; g += step) { var y = T + (1 - g / max) * (H - T - B); s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y.toFixed(1) + '" y2="' + y.toFixed(1) + '" class="grid"/><text x="' + (L - 6) + '" y="' + (y + 4).toFixed(1) + '" text-anchor="end" class="ax">' + g + '</text>'; }
+    if (rec) {
+      var yr0 = T + (1 - rec[0] / max) * (H - T - B), yr1 = T + (1 - rec[1] / max) * (H - T - B);
+      s += '<rect x="' + L + '" y="' + yr1.toFixed(1) + '" width="' + (W - L - R) + '" height="' + Math.max(1, yr0 - yr1).toFixed(1) + '" class="recband"/><text x="' + (W - R - 4) + '" y="' + (yr1 + 12).toFixed(1) + '" text-anchor="end" class="reclabel">Richtwert Spitze ' + rec[0] + ' bis ' + rec[1] + ' km</text>';
+    }
+    p.plan.forEach(function (w, i) {
+      var h = (w.volume / max) * (H - T - B), x = L + i * bw + bw * 0.14, y2 = H - B - h;
+      s += '<rect x="' + x.toFixed(1) + '" y="' + y2.toFixed(1) + '" width="' + (bw * 0.72).toFixed(1) + '" height="' + h.toFixed(1) + '" rx="2" class="bar ph-' + PHC[w.phase] + '"><title>Woche ' + w.n + ': ' + Math.round(w.volume) + ' km (' + w.phase + ')</title></rect>';
+      if (n <= 14 || (i + 1) % 2 === 1 || w.raceDay) s += '<text x="' + (x + bw * 0.36).toFixed(1) + '" y="' + (H - B + 14) + '" text-anchor="middle" class="ax">' + w.n + '</text>';
+    });
+    s += '<text x="' + L + '" y="' + (H - 4) + '" class="ax">Woche</text></svg>';
+    s += '<div class="legend"><span><i class="ph-g"></i>Grundlage</span><span><i class="ph-a"></i>Aufbau</span><span><i class="ph-s"></i>Spezifisch</span><span><i class="ph-t"></i>Tapering</span><span><i class="rb"></i>Richtwert</span></div>';
+    return s;
+  }
+  function renderPaces(p) {
+    var pc = p.paces, items = [['Locker', pc.easy, 'e'], ['Lang', pc.long, 'l'], ['Tempo', pc.tempo, 't'], ['Intervall', pc.intervall, 'q'], ['Zielpace', pc.ziel, 'z']], h = '<div class="paces">';
+    items.forEach(function (it) { h += '<div class="pace pc-' + it[2] + '"><span>' + it[0] + '</span><b>' + fmtPace(it[1]).replace(' min/km', '') + '</b><small>min/km</small></div>'; });
+    return h + '</div>';
+  }
+  function renderWeeks(p) {
+    var h = '<div class="weeks">';
+    p.plan.forEach(function (w, i) {
+      h += '<details class="week"' + (i < 2 ? ' open' : '') + '><summary><span class="wn">Woche ' + w.n + '</span>' + (w.monday ? '<span class="wd">ab ' + dd(w.monday) + '</span>' : '') + '<span class="pill ph-' + PHC[w.phase] + '">' + w.phase + '</span><span class="wv">' + Math.round(w.volume) + ' km</span></summary><ul class="sess">';
+      w.sessions.forEach(function (s) {
+        var c = chipFor(s);
+        h += '<li><span class="day">' + s.day + (s.date ? '<small>' + dd(s.date) + '</small>' : '') + '</span><span class="chip t-' + c[0] + '">' + c[1] + '</span><b class="km">' + km(s.km) + '</b><span class="desc">' + esc(s.desc) + '</span></li>';
+      });
+      (w.kraft || []).forEach(function (k) {
+        h += '<li><span class="day">' + k.day + (k.date ? '<small>' + dd(k.date) + '</small>' : '') + '</span><span class="chip t-K">Kraft ' + k.set + '</span><b class="km">45 Min</b><span class="desc">' + esc(k.desc) + '</span></li>';
+      });
+      if (w.raceDay) h += '<li class="race"><span class="day">' + w.race.day + (p.raceDate ? '<small>' + dd(p.raceDate) + '</small>' : '') + '</span><span class="chip t-F">Zieltag</span><b class="km">' + esc(p.distName) + '</b><span class="desc">Zielzeit ' + fmtTime(p.goalMin) + '. Die ersten Kilometer eher ruhig, dann Zielpace halten.</span></li>';
+      h += '</ul></details>';
+    });
+    return h + '</div>';
+  }
+
   /* Zeit mit Distanz deuten: "1:50" ist bei einem Halbmarathon 1 Std 50 Min, "25:30" bei 5 km 25 Min 30 Sek. */
   function parseTimeFor(str, distKm) {
     var p = String(str).trim().split(':').map(Number);
@@ -280,6 +341,6 @@
     return NaN;
   }
 
-  var API = { parseTimeFor: parseTimeFor, weeksUntil: weeksUntil, recVolume: recVolume, buildPlan: buildPlan, toICS: toICS, renderHTML: renderHTML, parseTime: parseTime, fmtTime: fmtTime, fmtPace: fmtPace, NAME: NAME, DIST: DIST, mondayOf: mondayOf };
+  var API = { renderVerdict: renderVerdict, renderChart: renderChart, renderPaces: renderPaces, renderWeeks: renderWeeks, parseTimeFor: parseTimeFor, weeksUntil: weeksUntil, recVolume: recVolume, buildPlan: buildPlan, toICS: toICS, renderHTML: renderHTML, parseTime: parseTime, fmtTime: fmtTime, fmtPace: fmtPace, NAME: NAME, DIST: DIST, mondayOf: mondayOf };
   if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.Laufplan = API;
 })(typeof window !== 'undefined' ? window : this);

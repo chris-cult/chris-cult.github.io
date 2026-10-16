@@ -3,135 +3,300 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Laufplan-Generator: dein Plan für 5 km bis Marathon</title>
+<title>Ziellinie: dein Laufplan</title>
+<meta name="description" content="Dein Laufplan für 5 km, 10 km, Halbmarathon oder Marathon. Mit Tempo für jeden Lauf und einer ehrlichen Einschätzung, ob dein Ziel passt. Kostenlos, läuft im Browser.">
 <style>
-:root{--bg:#f5f6f3;--fg:#1b2420;--dim:#59655f;--card:#fff;--line:#d8dcd5;--acc:#c2410c;--acc-fg:#fff;--warn:#9a3412;color-scheme:light}
-@media (prefers-color-scheme:dark){:root{--bg:#121513;--fg:#e9ede9;--dim:#9aa59e;--card:#1a1e1b;--line:#2c332e;--acc:#fb923c;--acc-fg:#1c0d02;--warn:#fdba74;color-scheme:dark}}
+/* Ziellinie: Tartanbahn-Rot auf kühlem Papier. Layout: Held links, Formular rechts, darunter Ergebnis als Diagramm und Wochenkarten. */
+:root{
+  --bg:#eef1f4; --panel:#ffffff; --ink:#0f1b2b; --dim:#566475; --line:#d9dfe6; --soft:#f5f7f9;
+  --acc:#d9411e; --acc-ink:#ffffff; --acc-soft:#fde9e3;
+  --g:#9db8cf; --a:#4a7db0; --s:#d9411e; --t:#8b97a5;
+  --v0:#0f8a5f; --v1:#b7791f; --v2:#c2570c; --v3:#c0262d;
+  --radius:14px; --shadow:0 1px 2px rgba(15,27,43,.06),0 8px 24px rgba(15,27,43,.06);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0b131d; --panel:#121d2a; --ink:#e8eef5; --dim:#9aabbd; --line:#243346; --soft:#0f1925;
+  --acc:#ff6a3d; --acc-ink:#1b0a04; --acc-soft:#2a1710;
+  --g:#5f87a8; --a:#5b93c9; --s:#ff6a3d; --t:#6d7b8b;
+  --v0:#35c490; --v1:#e3a93b; --v2:#f0883e; --v3:#ff6b70;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35); color-scheme:dark;}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;padding:20px 16px 60px}
-main{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
-h1{font-size:clamp(26px,5vw,38px);margin:0;text-wrap:balance}
-h2{font-size:20px;margin:6px 0 10px}
-.sub{color:var(--dim);max-width:62ch;margin:6px 0 0}
-.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
-label{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--dim)}
-input,select,button{font:inherit;color:var(--fg)}
-input,select{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:9px 10px;min-height:42px;width:100%}
-button{cursor:pointer;border:1px solid var(--acc);background:var(--acc);color:var(--acc-fg);border-radius:6px;padding:9px 14px;min-height:42px;font-weight:600}
-button.ghost{background:transparent;color:var(--fg);border-color:var(--line);font-weight:400}
-:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px}
-.scroll{overflow-x:auto}
-table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
-th,td{text-align:left;padding:8px 8px;border-bottom:1px solid var(--line);vertical-align:top}
-th{font-size:13px;color:var(--dim)}
-table.weeks{min-width:640px}
-td div{margin-bottom:6px}
-.warn{color:var(--warn);font-weight:600}
-.ok{color:#0b7a3b;font-weight:600}
-@media (prefers-color-scheme:dark){.ok{color:#4ade80}}
-.check{border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:10px 0 14px}
-.check h3{margin:0 0 6px;font-size:16px}
-.check ul{margin:6px 0 0;padding-left:20px}
-.check li{margin-bottom:4px}
-input:disabled{opacity:.75}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:64px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 16px}
+h1,h2,h3{line-height:1.12;margin:0;text-wrap:balance}
+.num,.pace b,.km,.big{font-variant-numeric:tabular-nums}
+
+/* Kopf */
+.hero{position:relative;overflow:hidden;padding:28px 0 20px}
+.brand{display:inline-flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.02em;font-size:18px}
+.brand svg{width:34px;height:34px}
+.hero h1{font-size:clamp(34px,6.4vw,62px);font-weight:850;letter-spacing:-.03em;margin:18px 0 12px;max-width:14ch}
+.hero h1 em{font-style:normal;color:var(--acc)}
+.lead{color:var(--dim);max-width:54ch;font-size:clamp(16px,2.2vw,19px);margin:0 0 16px}
+.proof{display:flex;flex-wrap:wrap;gap:8px 18px;list-style:none;padding:0;margin:0;color:var(--dim);font-size:14px}
+.proof li::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--acc);margin-right:8px}
+.lanes{position:absolute;right:-40px;top:0;width:min(520px,70vw);opacity:.9;pointer-events:none;z-index:0}
+.hero>*:not(.lanes){position:relative;z-index:1}
+
+/* Formular */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.form{padding:20px;display:grid;gap:22px}
+.cols{display:grid;grid-template-columns:1fr;gap:22px}
+@media(min-width:820px){.cols{grid-template-columns:1fr 1fr;gap:34px}}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+legend{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--acc);padding:0;margin-bottom:12px}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.field>span{font-size:14px;font-weight:650}
+.field small{color:var(--dim);font-size:13px}
+input[type=text],input[type=number],input[type=date],select{font:inherit;color:var(--ink);background:var(--soft);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;min-height:46px;width:100%}
+input:focus-visible,select:focus-visible,button:focus-visible,summary:focus-visible,.seg input:focus-visible+span{outline:3px solid color-mix(in srgb,var(--acc) 55%,transparent);outline-offset:2px}
+input:disabled{opacity:.7}
+.seg{display:flex;flex-wrap:wrap;gap:8px}
+.seg label{position:relative;cursor:pointer}
+.seg input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.seg span{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 16px;border-radius:999px;border:1.5px solid var(--line);background:var(--soft);font-weight:650;transition:background .15s,border-color .15s,color .15s}
+.seg input:checked+span{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+.seg label:hover span{border-color:var(--acc)}
+.range{display:grid;grid-template-columns:1fr 88px;gap:12px;align-items:center}
+input[type=range]{width:100%;accent-color:var(--acc);min-height:30px}
+.hint{display:flex;gap:8px;align-items:flex-start;margin:0;padding:10px 12px;border-radius:10px;background:var(--acc-soft);color:var(--ink);font-size:14px}
+.hint::before{content:"";flex:none;width:8px;height:8px;margin-top:7px;border-radius:50%;background:var(--acc)}
+.cta{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+button{font:inherit;cursor:pointer;border-radius:12px;min-height:48px;padding:0 22px;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);font-weight:650;transition:transform .12s,background .15s,border-color .15s}
+button:hover{border-color:var(--acc)}
+button:active{transform:translateY(1px)}
+button.primary{background:var(--acc);border-color:var(--acc);color:var(--acc-ink);font-size:17px;padding:0 28px}
+button.primary:hover{filter:brightness(1.06)}
+.err{color:var(--v3);font-weight:650}
+
+/* Ergebnis */
+.result{margin-top:22px;display:grid;gap:18px}
+.summary{display:flex;flex-wrap:wrap;gap:10px 24px;align-items:baseline;padding:18px 20px}
+.summary .big{font-size:clamp(26px,4.4vw,40px);font-weight:850;letter-spacing:-.02em}
+.summary span{color:var(--dim)}
+.verdict{padding:18px 20px;border-left:6px solid var(--v0)}
+.verdict.v1{border-left-color:var(--v1)}.verdict.v2{border-left-color:var(--v2)}.verdict.v3{border-left-color:var(--v3)}
+.vhead{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-bottom:8px}
+.vbadge{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:999px;color:#fff;background:var(--v0)}
+.v1 .vbadge{background:var(--v1)}.v2 .vbadge{background:var(--v2)}.v3 .vbadge{background:var(--v3)}
+.vhead h3{font-size:20px}
+.verdict ul{margin:0;padding-left:20px;display:grid;gap:6px}
+.verdict li.hint{background:none;padding:0;color:var(--dim);display:list-item}
+.verdict li.hint::before{display:none}
+.block{padding:18px 20px}
+.block h2{font-size:18px;margin-bottom:10px}
+.chart{width:100%;height:auto;display:block}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .ax{fill:var(--dim);font-size:11px}
+.chart .bar{transition:opacity .15s}
+.chart .bar:hover{opacity:.8}
+.chart .recband{fill:color-mix(in srgb,var(--v0) 16%,transparent);stroke:var(--v0);stroke-dasharray:4 4;stroke-width:1}
+.chart .reclabel{fill:var(--v0);font-size:11px;font-weight:650}
+.ph-g{fill:var(--g)}.ph-a{fill:var(--a)}.ph-s{fill:var(--s)}.ph-t{fill:var(--t)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:8px;font-size:13px;color:var(--dim)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.legend .ph-g{background:var(--g)}.legend .ph-a{background:var(--a)}.legend .ph-s{background:var(--s)}.legend .ph-t{background:var(--t)}
+.legend .rb{background:color-mix(in srgb,var(--v0) 30%,transparent);border:1px dashed var(--v0)}
+.paces{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+.pace{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:12px 14px;border-top:4px solid var(--g)}
+.pace span{display:block;font-size:13px;color:var(--dim)}
+.pace b{display:block;font-size:26px;letter-spacing:-.02em}
+.pace small{color:var(--dim)}
+.pc-t{border-top-color:var(--a)}.pc-q{border-top-color:var(--v2)}.pc-z{border-top-color:var(--acc)}.pc-l{border-top-color:var(--t)}
+.weeks{display:grid;gap:10px}
+.week{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.week summary{list-style:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:14px 16px;cursor:pointer}
+.week summary::-webkit-details-marker{display:none}
+.week summary::after{content:"+";margin-left:auto;font-size:22px;color:var(--dim);line-height:1}
+.week[open] summary::after{content:"−"}
+.wn{font-weight:800;font-size:17px}.wd{color:var(--dim);font-size:14px}.wv{font-weight:700;font-variant-numeric:tabular-nums}
+.pill{font-size:12px;font-weight:750;padding:3px 10px;border-radius:999px;color:#fff;background:var(--g)}
+.pill.ph-a{background:var(--a)}.pill.ph-s{background:var(--s)}.pill.ph-t{background:var(--t)}
+.sess{list-style:none;margin:0;padding:0 16px 8px}
+.sess li{display:grid;grid-template-columns:54px auto 1fr;gap:4px 12px;align-items:start;padding:12px 0;border-top:1px solid var(--line)}
+.sess .day{font-weight:800;line-height:1.2}.sess .day small{display:block;font-weight:500;color:var(--dim);font-size:12px}
+.chip{justify-self:start;font-size:12px;font-weight:750;padding:3px 10px;border-radius:999px;background:var(--soft);border:1px solid var(--line)}
+.t-E{background:color-mix(in srgb,var(--g) 22%,transparent);border-color:var(--g)}
+.t-L{background:color-mix(in srgb,var(--t) 24%,transparent);border-color:var(--t)}
+.t-T{background:color-mix(in srgb,var(--a) 22%,transparent);border-color:var(--a)}
+.t-Q{background:color-mix(in srgb,var(--v2) 22%,transparent);border-color:var(--v2)}
+.t-K{background:color-mix(in srgb,var(--v0) 20%,transparent);border-color:var(--v0)}
+.t-Z{background:var(--soft)}
+.t-F{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+.km{font-size:18px;justify-self:end;white-space:nowrap}
+.desc{grid-column:2 / -1;color:var(--dim);font-size:15px}
+.race{background:var(--acc-soft);margin:0 -16px;padding:12px 16px!important;border-radius:0 0 var(--radius) var(--radius)}
+@media(min-width:720px){.sess li{grid-template-columns:62px 110px 92px 1fr}.km{justify-self:start}.desc{grid-column:auto}}
+.tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .note{font-size:13px;color:var(--dim)}
-small{color:var(--dim)}
-#err{color:var(--warn);font-weight:600}
-@media print{body{background:#fff;color:#000}.noprint{display:none!important}.card{border:0;padding:0}}
+footer{margin-top:30px;color:var(--dim);font-size:13px;display:grid;gap:8px}
+footer p{margin:0;max-width:78ch}
+@media print{
+  body{background:#fff;color:#000}.noprint,.hero .lanes{display:none!important}
+  .panel,.week{box-shadow:none;border:1px solid #bbb}.week summary::after{display:none}
+  .hero{padding:0}.hero h1{font-size:28px;margin:6px 0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-<main>
-<header>
-  <h1>Laufplan-Generator</h1>
-  <p class="sub">Sag, welche Strecke du in welcher Zeit laufen willst und wie viele Wochen du Zeit hast. Du bekommst einen Wochenplan mit Tempo für jeden Lauf, als Tabelle, zum Drucken und als Kalenderdatei. Alles rechnet in deinem Browser, es wird nichts gesendet.</p>
+<div class="wrap">
+
+<header class="hero">
+  <svg class="lanes" viewBox="0 0 520 220" fill="none" aria-hidden="true">
+    <g stroke="var(--acc)" stroke-width="2" stroke-linecap="round" opacity=".28">
+      <path d="M0 214C170 214 330 120 520 10"/><path d="M0 196C160 196 316 108 520 -8"/><path d="M0 178C150 178 302 96 520 -26"/>
+      <path d="M0 160C140 160 288 84 520 -44"/><path d="M0 142C130 142 274 72 520 -62"/>
+    </g>
+    <path d="M470 0 V60" stroke="var(--acc)" stroke-width="10" opacity=".6"/>
+  </svg>
+  <div class="brand">
+    <svg viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="9" fill="var(--acc)"/><path d="M8 24 L26 24 M8 19 L26 19 M8 14 L26 14" stroke="var(--acc-ink)" stroke-width="2" stroke-linecap="round" opacity=".55"/><path d="M24 8 V26" stroke="var(--acc-ink)" stroke-width="3.4" stroke-linecap="round"/></svg>
+    <span>Ziellinie</span>
+  </div>
+  <h1>Dein Laufplan bis zur <em>Ziellinie</em>.</h1>
+  <p class="lead">Sag, wohin du willst und wann. Du bekommst einen Wochenplan mit Tempo für jeden Lauf und eine ehrliche Einschätzung, ob dein Ziel in der Zeit passt.</p>
+  <ul class="proof"><li>Kostenlos</li><li>Rechnet in deinem Browser</li><li>Kalender, Tabelle und Druck</li></ul>
 </header>
 
-<section class="card noprint">
-  <div class="grid">
-    <label>Distanz<select id="dist"><option value="5">5 km</option><option value="10">10 km</option><option value="21" selected>Halbmarathon</option><option value="42">Marathon</option></select></label>
-    <label>Zielzeit (h:mm:ss)<input id="goal" type="text" value="2:00:00" inputmode="numeric" placeholder="z. B. 1:55:00 oder 1:55"></label>
-    <label>Wettkampftag oder Zieldatum<input id="race" type="date"></label>
-    <label>Wochen bis dahin (6 bis 24)<input id="weeks" type="number" min="6" max="24" value="16"></label>
-    <label>Läufe pro Woche<select id="runs"><option>3</option><option selected>4</option><option>5</option></select></label>
-    <label>Heute pro Woche (km)<input id="cur" type="number" min="5" max="120" value="25"></label>
-    <label>Letzte Bestzeit über (optional)<select id="refd"><option value="">keine Angabe</option><option value="5">5 km</option><option value="10">10 km</option><option value="21.0975">Halbmarathon</option><option value="42.195">Marathon</option></select></label>
-    <label>Bestzeit (h:mm:ss, optional)<input id="reft" type="text" inputmode="numeric" placeholder="z. B. 0:50:00"></label>
-    <label id="kraftWrap" hidden>Kraft und Mobilität<select id="kraft"><option value="1" selected>ja, 2 Einheiten pro Woche</option><option value="0">nein</option></select></label>
+<form class="panel form noprint" id="form" onsubmit="return false">
+  <div class="cols">
+    <fieldset>
+      <legend>Dein Ziel</legend>
+      <div class="field"><span>Strecke</span>
+        <div class="seg" role="radiogroup" aria-label="Strecke" id="dist">
+          <label><input type="radio" name="dist" value="5"><span>5 km</span></label>
+          <label><input type="radio" name="dist" value="10"><span>10 km</span></label>
+          <label><input type="radio" name="dist" value="21" checked><span>Halbmarathon</span></label>
+          <label><input type="radio" name="dist" value="42"><span>Marathon</span></label>
+        </div>
+      </div>
+      <label class="field"><span>Zielzeit</span><input id="goal" type="text" inputmode="numeric" autocomplete="off" value="2:00:00" placeholder="z. B. 1:55:00 oder 1:55"><small>Stunden:Minuten:Sekunden. „1:55“ bei Halbmarathon heißt 1 Std 55 Min.</small></label>
+      <label class="field"><span>Wettkampftag oder Zieldatum</span><input id="race" type="date"><small>Kein Wettkampf? Nimm den Tag, an dem du die Strecke laufen willst.</small></label>
+      <p class="hint" id="weeksHint" role="status">Trag ein Datum ein. Dann zähle ich die Wochen für dich und schreibe Daten in den Plan.</p>
+      <label class="field" style="margin-top:12px"><span>Wochen bis dahin</span><input id="weeks" type="number" min="6" max="24" value="16" inputmode="numeric"><small>Ohne Datum gibst du die Wochen selbst an (6 bis 24).</small></label>
+    </fieldset>
+    <fieldset>
+      <legend>Dein Stand</legend>
+      <div class="field"><span>Läufe pro Woche</span>
+        <div class="seg" role="radiogroup" aria-label="Läufe pro Woche" id="runs">
+          <label><input type="radio" name="runs" value="3"><span>3</span></label>
+          <label><input type="radio" name="runs" value="4" checked><span>4</span></label>
+          <label><input type="radio" name="runs" value="5"><span>5</span></label>
+        </div>
+      </div>
+      <div class="field"><span>Heute pro Woche</span>
+        <div class="range"><input id="curR" type="range" min="5" max="100" value="25" aria-label="Kilometer pro Woche heute"><input id="cur" type="number" min="5" max="120" value="25" inputmode="numeric" aria-label="Kilometer pro Woche"></div>
+        <small>Kilometer, die du in einer normalen Woche läufst.</small>
+      </div>
+      <label class="field"><span>Letzte Bestzeit über (optional)</span><select id="refd"><option value="">keine Angabe</option><option value="5">5 km</option><option value="10">10 km</option><option value="21.0975">Halbmarathon</option><option value="42.195">Marathon</option></select></label>
+      <label class="field"><span>Bestzeit (optional)</span><input id="reft" type="text" inputmode="numeric" autocomplete="off" placeholder="z. B. 50:00 oder 1:48:00"><small>Damit prüfe ich ehrlicher, ob dein Ziel passt.</small></label>
+      <label class="field" id="kraftWrap" hidden><span>Kraft und Mobilität</span><select id="kraft"><option value="1" selected>ja, 2 Einheiten pro Woche</option><option value="0">nein</option></select></label>
+    </fieldset>
   </div>
-  <p id="weeksHint" class="note" style="margin-top:8px" role="status">Trag einen Wettkampftag oder dein Zieldatum ein. Dann zählt das Werkzeug die Wochen selbst und schreibt Daten in den Plan. Ohne Datum gibst du die Wochen selbst an und bekommst einen Plan ohne Daten.</p>
-  <p class="note">Mit deiner letzten Bestzeit prüft das Werkzeug ehrlicher, ob dein Ziel in der Zeit machbar ist.</p>
-  <div class="row"><button id="go" type="button">Plan erstellen</button><span id="err" role="alert"></span></div>
-</section>
+  <div class="cta"><button class="primary" id="go" type="button">Plan berechnen</button><span class="err" id="err" role="alert"></span></div>
+</form>
 
-<section class="card" id="out" hidden>
-  <div id="plan"></div>
-  <div class="row noprint">
-    <button id="ics" class="ghost" type="button">Als Kalenderdatei (.ics)</button>
-    <button id="csv" class="ghost" type="button">Als Tabelle (.csv)</button>
-    <button id="garmin" class="ghost" type="button" hidden>Für Garmin (.zip mit .fit)</button>
-    <button id="print" class="ghost" type="button">Drucken oder als PDF speichern</button>
-    <span id="msg" class="note" role="status"></span>
-  </div>
-</section>
+<main class="result" id="out" hidden>
+  <section class="panel summary" id="summary"></section>
+  <div id="verdict"></div>
+  <section class="panel block"><h2>Wochenumfang</h2><div id="chart"></div></section>
+  <section class="panel block"><h2>Dein Tempo</h2><div id="paces"></div></section>
+  <section>
+    <div class="tools noprint" style="margin-bottom:12px">
+      <h2 style="font-size:20px;margin-right:auto">Dein Plan</h2>
+      <button class="ghost" id="toggle" type="button">Alle öffnen</button>
+    </div>
+    <div id="weeksList"></div>
+  </section>
+  <section class="panel block noprint">
+    <h2>Mitnehmen</h2>
+    <div class="tools">
+      <button id="ics" type="button">Kalenderdatei (.ics)</button>
+      <button id="csv" type="button">Tabelle (.csv)</button>
+      <button id="garmin" type="button" hidden>Für Garmin (.zip mit .fit)</button>
+      <button id="print" type="button">Drucken oder als PDF</button>
+      <span id="msg" class="note" role="status"></span>
+    </div>
+  </section>
+</main>
 
-<footer class="note">
+<footer>
   <p>Die Pläne sind Rechenbeispiele mit Faustwerten und keine medizinische oder sportwissenschaftliche Beratung. Wenn du Beschwerden hast, krank oder lange nicht gelaufen bist, sprich vorher mit einer Ärztin oder einem Arzt. Training auf eigene Verantwortung.</p>
   <p>Die Seite zählt Aufrufe anonym mit Cloudflare Web Analytics, ohne Cookies und ohne einzelne Besucher zu verfolgen. Deine Eingaben bleiben im Browser und werden nicht gesendet.</p>
 </footer>
-</main>
-<script src="plan.js?v=2"></script>
+</div>
+
+<script src="plan.js?v=3"></script>
 <script>
 (function(){
   var $=function(i){return document.getElementById(i)}, last=null;
-  function msg(t){$('msg').textContent=t;setTimeout(function(){$('msg').textContent=''},2500)}
+  function val(name){var c=document.querySelector('input[name="'+name+'"]:checked');return c?c.value:''}
+  function msg(t){$('msg').textContent=t;setTimeout(function(){$('msg').textContent=''},3000)}
+  function fmt(d){return ('0'+d.getDate()).slice(-2)+'.'+('0'+(d.getMonth()+1)).slice(-2)+'.'+d.getFullYear()}
+  /* Kilometer: Regler und Zahlenfeld gleichhalten */
+  $('curR').addEventListener('input',function(){$('cur').value=this.value});
+  $('cur').addEventListener('input',function(){var v=Math.max(5,Math.min(100,parseFloat(this.value)||5));$('curR').value=v});
+  /* Wochen aus dem Datum */
+  var hintDefault=$('weeksHint').textContent;
+  function updWeeks(){
+    var race=$('race').value, w=$('weeks'), h=$('weeksHint');
+    if(!race){w.disabled=false;h.textContent=hintDefault;return;}
+    var wu=Laufplan.weeksUntil(race); if(!wu){w.disabled=false;h.textContent=hintDefault;return;}
+    w.disabled=true;
+    if(wu.weeks<6){w.value=Math.max(0,wu.weeks);h.textContent='Bis zum '+fmt(wu.race)+' sind es nur '+Math.max(0,wu.weeks)+' Wochen. Das reicht nicht für einen Plan. Wähle ein späteres Datum.';return;}
+    if(wu.weeks>24){w.value=24;var st=new Date(wu.raceMonday.getTime());st.setDate(st.getDate()-7*23);h.textContent='Bis zum '+fmt(wu.race)+' sind es '+wu.weeks+' Wochen. Der Plan deckt die letzten 24 ab und beginnt am Montag, '+fmt(st)+'. Bis dahin lauf locker weiter und halte deinen Umfang.';return;}
+    w.value=wu.weeks;h.textContent='Bis zum '+fmt(wu.race)+' sind es '+wu.weeks+' Wochen. Der Plan beginnt am Montag, '+fmt(wu.start)+'.';
+  }
+  $('race').addEventListener('input',updWeeks);$('race').addEventListener('change',updWeeks);
+
   function make(){
     $('err').textContent='';
-    var goal=Laufplan.parseTimeFor($('goal').value,Laufplan.DIST[$('dist').value]);
-    if(!(goal>0)){$('err').textContent='Bitte die Zielzeit eingeben, zum Beispiel 1:55:00 oder 1:55 (Stunden und Minuten) oder 25:30 (Minuten und Sekunden). Das Tempo muss zwischen 2:30 und 12:00 min/km liegen.';return;}
+    var dist=val('dist'), goal=Laufplan.parseTimeFor($('goal').value,Laufplan.DIST[dist]);
+    if(!(goal>0)){$('err').textContent='Bitte die Zielzeit eingeben, zum Beispiel 1:55:00, 1:55 (Stunden und Minuten) oder 25:30 (Minuten und Sekunden). Das Tempo muss zwischen 2:30 und 12:00 min/km liegen.';return;}
     var weeks=parseInt($('weeks').value,10), race=$('race').value;
-    if(race){ var wu=Laufplan.weeksUntil(race); if(!wu||wu.weeks<6){$('err').textContent='Bis zu diesem Tag sind es weniger als 6 Wochen. Wähle einen späteren Tag oder lasse das Feld leer. Für kürzere Zeiträume ist ein Trainingsplan nicht sinnvoll.';return;} weeks=Math.min(24,wu.weeks); }
-    var ref=null, rt=$('reft').value.trim();
-    if($('refd').value&&rt){ var rd=parseFloat($('refd').value), rm=Laufplan.parseTimeFor(rt,rd); if(!(rm>0)){$('err').textContent='Bitte die Bestzeit eingeben, zum Beispiel 0:50:00 oder 50:00.';return;} ref={d:rd,min:rm}; }
+    if(race){var wu=Laufplan.weeksUntil(race);if(!wu||wu.weeks<6){$('err').textContent='Bis zu diesem Tag sind es weniger als 6 Wochen. Wähle einen späteren Tag oder lasse das Feld leer. Für kürzere Zeiträume ist ein Trainingsplan nicht sinnvoll.';return;}weeks=Math.min(24,wu.weeks);}
+    var ref=null,rt=$('reft').value.trim();
+    if($('refd').value&&rt){var rd=parseFloat($('refd').value),rm=Laufplan.parseTimeFor(rt,rd);if(!(rm>0)){$('err').textContent='Bitte die Bestzeit eingeben, zum Beispiel 50:00 oder 1:48:00.';return;}ref={d:rd,min:rm};}
     try{
-      last=Laufplan.buildPlan({dist:$('dist').value,goalMin:goal,weeks:weeks,runs:$('runs').value,curKm:$('cur').value,raceDate:race||null,ref:ref,interactive:true,kraft:!!window.LAUFPLAN_PRO&&$('kraft').value==='1'});
+      last=Laufplan.buildPlan({dist:dist,goalMin:goal,weeks:weeks,runs:val('runs'),curKm:$('cur').value,raceDate:race||null,ref:ref,interactive:true,kraft:!!window.LAUFPLAN_PRO&&$('kraft').value==='1'});
     }catch(e){$('err').textContent=e.message;return;}
-    $('plan').innerHTML=Laufplan.renderHTML(last);
+    var p=last;
+    $('summary').innerHTML='<div class="big">'+p.distName+' in '+Laufplan.fmtTime(p.goalMin)+'</div><span>'+p.weeks+' Wochen</span><span>'+p.runs+' Läufe pro Woche</span>'+(p.raceDate?'<span>Zieltag '+fmt(p.raceDate)+'</span>':'');
+    $('verdict').innerHTML=Laufplan.renderVerdict(p);
+    $('chart').innerHTML=Laufplan.renderChart(p);
+    $('paces').innerHTML=Laufplan.renderPaces(p);
+    $('weeksList').innerHTML=Laufplan.renderWeeks(p);
+    $('toggle').textContent='Alle öffnen';
     $('out').hidden=false;
-    $('ics').disabled=!last.raceDate; $('ics').title=last.raceDate?'':'Dafür den Wettkampftag eintragen';
+    $('ics').disabled=!p.raceDate;$('ics').title=p.raceDate?'':'Dafür den Wettkampftag oder das Zieldatum eintragen';
+    $('out').scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'start'});
   }
   function save(name,type,text){
     try{var b=new Blob([text],{type:type+';charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();}
     catch(e){msg('Speichern nicht möglich.');}
   }
-  var hintDefault=$('weeksHint').textContent;
-  function updWeeks(){
-    var race=$('race').value, w=$('weeks'), h=$('weeksHint');
-    if(!race){ w.disabled=false; h.textContent=hintDefault; return; }
-    var wu=Laufplan.weeksUntil(race); if(!wu){ w.disabled=false; h.textContent=hintDefault; return; }
-    var fmt=function(d){return ('0'+d.getDate()).slice(-2)+'.'+('0'+(d.getMonth()+1)).slice(-2)+'.'+d.getFullYear()};
-    w.disabled=true;
-    if(wu.weeks<6){ w.value=Math.max(0,wu.weeks); h.textContent='Bis zum '+fmt(wu.race)+' sind es nur '+Math.max(0,wu.weeks)+' Wochen. Das reicht nicht für einen Plan. Wähle ein späteres Datum.'; return; }
-    if(wu.weeks>24){ w.value=24; var st=new Date(wu.raceMonday.getTime()); st.setDate(st.getDate()-7*23); h.textContent='Bis zum '+fmt(wu.race)+' sind es '+wu.weeks+' Wochen. Der Plan deckt die letzten 24 Wochen ab und beginnt am Montag, '+fmt(st)+'. Bis dahin lauf locker weiter und halte deinen heutigen Umfang.'; return; }
-    w.value=wu.weeks; h.textContent='Bis zum '+fmt(wu.race)+' sind es '+wu.weeks+' Wochen. Der Plan beginnt am Montag, '+fmt(wu.start)+'.';
-  }
-  $('race').addEventListener('input',updWeeks); $('race').addEventListener('change',updWeeks);
-  if(window.LAUFPLAN_PRO&&window.LaufplanFit){ $('kraftWrap').hidden=false; $('garmin').hidden=false; }
+  if(window.LAUFPLAN_PRO&&window.LaufplanFit){$('kraftWrap').hidden=false;$('garmin').hidden=false;}
   $('garmin').addEventListener('click',function(){
-    if(!last) return; var g=LaufplanFit.garminZip(last,Date.now()/1000);
-    save('laufplan-garmin.zip','application/zip',g.zip); msg(g.count+' Workouts. Entpacken und in den Ordner GARMIN/NewFiles der Uhr kopieren.');
+    if(!last)return;var g=LaufplanFit.garminZip(last,Date.now()/1000);
+    save('laufplan-garmin.zip','application/zip',g.zip);msg(g.count+' Workouts. Entpacken und in den Ordner GARMIN/NewFiles der Uhr kopieren.');
   });
   $('go').addEventListener('click',make);
-  $('ics').addEventListener('click',function(){ if(last&&last.raceDate) save('laufplan.ics','text/calendar',Laufplan.toICS(last)); });
+  document.querySelectorAll('#form input[type=text],#form input[type=number],#form input[type=date]').forEach(function(i){i.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();make();}});});
+  $('toggle').addEventListener('click',function(){
+    var ds=document.querySelectorAll('#weeksList details'),open=this.textContent==='Alle öffnen';
+    ds.forEach(function(d){d.open=open});this.textContent=open?'Alle schließen':'Alle öffnen';
+  });
+  $('ics').addEventListener('click',function(){if(last&&last.raceDate)save('laufplan.ics','text/calendar',Laufplan.toICS(last));});
   $('csv').addEventListener('click',function(){
-    if(!last) return; var rows=[['Woche','Phase','Datum','Tag','Einheit','Kilometer','Beschreibung']];
-    last.plan.forEach(function(w){ w.sessions.forEach(function(s){ rows.push([w.n,w.phase,s.date?s.date.toLocaleDateString('de-DE'):'',s.day,s.type,String(s.km).replace('.',','),s.desc]); }); });
+    if(!last)return;var rows=[['Woche','Phase','Datum','Tag','Einheit','Kilometer','Beschreibung']];
+    last.plan.forEach(function(w){w.sessions.forEach(function(s){rows.push([w.n,w.phase,s.date?s.date.toLocaleDateString('de-DE'):'',s.day,s.type,String(s.km).replace('.',','),s.desc]);});});
     var csv='﻿'+rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"'}).join(';')}).join('\r\n');
     save('laufplan.csv','text/csv',csv);
   });
-  $('print').addEventListener('click',function(){window.print()});
+  $('print').addEventListener('click',function(){document.querySelectorAll('#weeksList details').forEach(function(d){d.open=true});window.print();});
 })();
 </script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "e24f29f02210414bb965f5da29d17775"}'></script><!-- End Cloudflare Web Analytics -->
