@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Laufplan-Generator: dein Plan für 5 km bis Marathon</title>
+<style>
+:root{--bg:#f5f6f3;--fg:#1b2420;--dim:#59655f;--card:#fff;--line:#d8dcd5;--acc:#c2410c;--acc-fg:#fff;--warn:#9a3412;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#121513;--fg:#e9ede9;--dim:#9aa59e;--card:#1a1e1b;--line:#2c332e;--acc:#fb923c;--acc-fg:#1c0d02;--warn:#fdba74;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;padding:20px 16px 60px}
+main{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1{font-size:clamp(26px,5vw,38px);margin:0;text-wrap:balance}
+h2{font-size:20px;margin:6px 0 10px}
+.sub{color:var(--dim);max-width:62ch;margin:6px 0 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+label{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--dim)}
+input,select,button{font:inherit;color:var(--fg)}
+input,select{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:9px 10px;min-height:42px;width:100%}
+button{cursor:pointer;border:1px solid var(--acc);background:var(--acc);color:var(--acc-fg);border-radius:6px;padding:9px 14px;min-height:42px;font-weight:600}
+button.ghost{background:transparent;color:var(--fg);border-color:var(--line);font-weight:400}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:8px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:13px;color:var(--dim)}
+table.weeks{min-width:640px}
+td div{margin-bottom:6px}
+.warn{color:var(--warn);font-weight:600}
+.ok{color:#0b7a3b;font-weight:600}
+@media (prefers-color-scheme:dark){.ok{color:#4ade80}}
+.check{border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:10px 0 14px}
+.check h3{margin:0 0 6px;font-size:16px}
+.check ul{margin:6px 0 0;padding-left:20px}
+.check li{margin-bottom:4px}
+input:disabled{opacity:.75}
+.note{font-size:13px;color:var(--dim)}
+small{color:var(--dim)}
+#err{color:var(--warn);font-weight:600}
+@media print{body{background:#fff;color:#000}.noprint{display:none!important}.card{border:0;padding:0}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>Laufplan-Generator</h1>
+  <p class="sub">Sag, welche Strecke du in welcher Zeit laufen willst und wie viele Wochen du Zeit hast. Du bekommst einen Wochenplan mit Tempo für jeden Lauf, als Tabelle, zum Drucken und als Kalenderdatei. Alles rechnet in deinem Browser, es wird nichts gesendet.</p>
+</header>
+
+<section class="card noprint">
+  <div class="grid">
+    <label>Distanz<select id="dist"><option value="5">5 km</option><option value="10">10 km</option><option value="21" selected>Halbmarathon</option><option value="42">Marathon</option></select></label>
+    <label>Zielzeit (h:mm:ss)<input id="goal" type="text" value="2:00:00" inputmode="numeric" placeholder="z. B. 1:55:00 oder 1:55"></label>
+    <label>Wettkampftag oder Zieldatum<input id="race" type="date"></label>
+    <label>Wochen bis dahin (6 bis 24)<input id="weeks" type="number" min="6" max="24" value="16"></label>
+    <label>Läufe pro Woche<select id="runs"><option>3</option><option selected>4</option><option>5</option></select></label>
+    <label>Heute pro Woche (km)<input id="cur" type="number" min="5" max="120" value="25"></label>
+    <label>Letzte Bestzeit über (optional)<select id="refd"><option value="">keine Angabe</option><option value="5">5 km</option><option value="10">10 km</option><option value="21.0975">Halbmarathon</option><option value="42.195">Marathon</option></select></label>
+    <label>Bestzeit (h:mm:ss, optional)<input id="reft" type="text" inputmode="numeric" placeholder="z. B. 0:50:00"></label>
+    <label id="kraftWrap" hidden>Kraft und Mobilität<select id="kraft"><option value="1" selected>ja, 2 Einheiten pro Woche</option><option value="0">nein</option></select></label>
+  </div>
+  <p id="weeksHint" class="note" style="margin-top:8px" role="status">Trag einen Wettkampftag oder dein Zieldatum ein. Dann zählt das Werkzeug die Wochen selbst und schreibt Daten in den Plan. Ohne Datum gibst du die Wochen selbst an und bekommst einen Plan ohne Daten.</p>
+  <p class="note">Mit deiner letzten Bestzeit prüft das Werkzeug ehrlicher, ob dein Ziel in der Zeit machbar ist.</p>
+  <div class="row"><button id="go" type="button">Plan erstellen</button><span id="err" role="alert"></span></div>
+</section>
+
+<section class="card" id="out" hidden>
+  <div id="plan"></div>
+  <div class="row noprint">
+    <button id="ics" class="ghost" type="button">Als Kalenderdatei (.ics)</button>
+    <button id="csv" class="ghost" type="button">Als Tabelle (.csv)</button>
+    <button id="garmin" class="ghost" type="button" hidden>Für Garmin (.zip mit .fit)</button>
+    <button id="print" class="ghost" type="button">Drucken oder als PDF speichern</button>
+    <span id="msg" class="note" role="status"></span>
+  </div>
+</section>
+
+<footer class="note">
+  <p>Die Pläne sind Rechenbeispiele mit Faustwerten und keine medizinische oder sportwissenschaftliche Beratung. Wenn du Beschwerden hast, krank oder lange nicht gelaufen bist, sprich vorher mit einer Ärztin oder einem Arzt. Training auf eigene Verantwortung.</p>
+  <p>Die Seite zählt Aufrufe anonym mit Cloudflare Web Analytics, ohne Cookies und ohne einzelne Besucher zu verfolgen. Deine Eingaben bleiben im Browser und werden nicht gesendet.</p>
+</footer>
+</main>
+<script src="plan.js?v=2"></script>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)}, last=null;
+  function msg(t){$('msg').textContent=t;setTimeout(function(){$('msg').textContent=''},2500)}
+  function make(){
+    $('err').textContent='';
+    var goal=Laufplan.parseTimeFor($('goal').value,Laufplan.DIST[$('dist').value]);
+    if(!(goal>0)){$('err').textContent='Bitte die Zielzeit eingeben, zum Beispiel 1:55:00 oder 1:55 (Stunden und Minuten) oder 25:30 (Minuten und Sekunden). Das Tempo muss zwischen 2:30 und 12:00 min/km liegen.';return;}
+    var weeks=parseInt($('weeks').value,10), race=$('race').value;
+    if(race){ var wu=Laufplan.weeksUntil(race); if(!wu||wu.weeks<6){$('err').textContent='Bis zu diesem Tag sind es weniger als 6 Wochen. Wähle einen späteren Tag oder lasse das Feld leer. Für kürzere Zeiträume ist ein Trainingsplan nicht sinnvoll.';return;} weeks=Math.min(24,wu.weeks); }
+    var ref=null, rt=$('reft').value.trim();
+    if($('refd').value&&rt){ var rd=parseFloat($('refd').value), rm=Laufplan.parseTimeFor(rt,rd); if(!(rm>0)){$('err').textContent='Bitte die Bestzeit eingeben, zum Beispiel 0:50:00 oder 50:00.';return;} ref={d:rd,min:rm}; }
+    try{
+      last=Laufplan.buildPlan({dist:$('dist').value,goalMin:goal,weeks:weeks,runs:$('runs').value,curKm:$('cur').value,raceDate:race||null,ref:ref,interactive:true,kraft:!!window.LAUFPLAN_PRO&&$('kraft').value==='1'});
+    }catch(e){$('err').textContent=e.message;return;}
+    $('plan').innerHTML=Laufplan.renderHTML(last);
+    $('out').hidden=false;
+    $('ics').disabled=!last.raceDate; $('ics').title=last.raceDate?'':'Dafür den Wettkampftag eintragen';
+  }
+  function save(name,type,text){
+    try{var b=new Blob([text],{type:type+';charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();}
+    catch(e){msg('Speichern nicht möglich.');}
+  }
+  var hintDefault=$('weeksHint').textContent;
+  function updWeeks(){
+    var race=$('race').value, w=$('weeks'), h=$('weeksHint');
+    if(!race){ w.disabled=false; h.textContent=hintDefault; return; }
+    var wu=Laufplan.weeksUntil(race); if(!wu){ w.disabled=false; h.textContent=hintDefault; return; }
+    var fmt=function(d){return ('0'+d.getDate()).slice(-2)+'.'+('0'+(d.getMonth()+1)).slice(-2)+'.'+d.getFullYear()};
+    w.disabled=true;
+    if(wu.weeks<6){ w.value=Math.max(0,wu.weeks); h.textContent='Bis zum '+fmt(wu.race)+' sind es nur '+Math.max(0,wu.weeks)+' Wochen. Das reicht nicht für einen Plan. Wähle ein späteres Datum.'; return; }
+    if(wu.weeks>24){ w.value=24; var st=new Date(wu.raceMonday.getTime()); st.setDate(st.getDate()-7*23); h.textContent='Bis zum '+fmt(wu.race)+' sind es '+wu.weeks+' Wochen. Der Plan deckt die letzten 24 Wochen ab und beginnt am Montag, '+fmt(st)+'. Bis dahin lauf locker weiter und halte deinen heutigen Umfang.'; return; }
+    w.value=wu.weeks; h.textContent='Bis zum '+fmt(wu.race)+' sind es '+wu.weeks+' Wochen. Der Plan beginnt am Montag, '+fmt(wu.start)+'.';
+  }
+  $('race').addEventListener('input',updWeeks); $('race').addEventListener('change',updWeeks);
+  if(window.LAUFPLAN_PRO&&window.LaufplanFit){ $('kraftWrap').hidden=false; $('garmin').hidden=false; }
+  $('garmin').addEventListener('click',function(){
+    if(!last) return; var g=LaufplanFit.garminZip(last,Date.now()/1000);
+    save('laufplan-garmin.zip','application/zip',g.zip); msg(g.count+' Workouts. Entpacken und in den Ordner GARMIN/NewFiles der Uhr kopieren.');
+  });
+  $('go').addEventListener('click',make);
+  $('ics').addEventListener('click',function(){ if(last&&last.raceDate) save('laufplan.ics','text/calendar',Laufplan.toICS(last)); });
+  $('csv').addEventListener('click',function(){
+    if(!last) return; var rows=[['Woche','Phase','Datum','Tag','Einheit','Kilometer','Beschreibung']];
+    last.plan.forEach(function(w){ w.sessions.forEach(function(s){ rows.push([w.n,w.phase,s.date?s.date.toLocaleDateString('de-DE'):'',s.day,s.type,String(s.km).replace('.',','),s.desc]); }); });
+    var csv='﻿'+rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"'}).join(';')}).join('\r\n');
+    save('laufplan.csv','text/csv',csv);
+  });
+  $('print').addEventListener('click',function(){window.print()});
+})();
+</script>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "e24f29f02210414bb965f5da29d17775"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>
