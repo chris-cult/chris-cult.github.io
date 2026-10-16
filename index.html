@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ziellinie: dein Laufplan</title>
+<meta name="theme-color" content="#d9411e">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ziellinie">
 <meta name="description" content="Dein Laufplan für 5 km, 10 km, Halbmarathon oder Marathon. Mit Tempo für jeden Lauf und einer ehrlichen Einschätzung, ob dein Ziel passt. Kostenlos, läuft im Browser.">
 <style>
 /* Ziellinie: Tartanbahn-Rot auf kühlem Papier. Layout: Held links, Formular rechts, darunter Ergebnis als Diagramm und Wochenkarten. */
@@ -299,6 +305,7 @@ footer p{margin:0;max-width:78ch}
   $('print').addEventListener('click',function(){document.querySelectorAll('#weeksList details').forEach(function(d){d.open=true});window.print();});
 })();
 </script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "e24f29f02210414bb965f5da29d17775"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>
