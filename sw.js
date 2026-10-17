@@ -1,6 +1,6 @@
 // Offline-Cache für Ziellinie. Bei Änderungen an Dateien VERSION erhöhen.
-var VERSION = 'ziellinie-v1';
-var DATEIEN = ['./', 'index.html', 'plan.js?v=3', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'];
+var VERSION = 'ziellinie-v2';
+var DATEIEN = ['./', 'index.html', 'plan.js?v=3', 'impressum.html', 'datenschutz.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(VERSION).then(function (c) { return c.addAll(DATEIEN); }).then(function () { return self.skipWaiting(); }));
