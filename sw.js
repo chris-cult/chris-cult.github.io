@@ -1,5 +1,5 @@
 // Offline-Cache für Ziellinie. Bei Änderungen an Dateien VERSION erhöhen.
-var VERSION = 'ziellinie-v2';
+var VERSION = 'ziellinie-v3';
 var DATEIEN = ['./', 'index.html', 'plan.js?v=3', 'impressum.html', 'datenschutz.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'];
 
 self.addEventListener('install', function (e) {
