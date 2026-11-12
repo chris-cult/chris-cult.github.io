@@ -1,7 +1,7 @@
 {
-  "name": "Ziellinie: dein Laufplan",
+  "name": "Ziellinie: dein Trainingsplan",
   "short_name": "Ziellinie",
-  "description": "Laufplan für 5 km bis Marathon mit Tempo und ehrlicher Einschätzung. Kostenlos, läuft offline.",
+  "description": "Trainingsplan für Laufen, Radfahren und Schwimmen mit Tempo und ehrlicher Einschätzung. Kostenlos, läuft offline.",
   "lang": "de",
   "start_url": "./",
   "scope": "./",

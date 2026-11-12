@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Ziellinie: dein Laufplan</title>
+<title>Ziellinie: dein Trainingsplan</title>
 <meta name="theme-color" content="#d9411e">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Ziellinie">
-<meta name="description" content="Dein Laufplan für 5 km, 10 km, Halbmarathon oder Marathon. Mit Tempo für jeden Lauf und einer ehrlichen Einschätzung, ob dein Ziel passt. Kostenlos, läuft im Browser.">
+<meta name="description" content="Dein Trainingsplan fürs Laufen (5 km bis Marathon), Radfahren (50 bis 200 km) oder Schwimmen (750 m bis 3,8 km). Mit Tempo für jede Einheit und einer ehrlichen Einschätzung, ob dein Ziel passt. Kostenlos, läuft im Browser.">
 <style>
 /* Ziellinie: Tartanbahn-Rot auf kühlem Papier. Layout: Held links, Formular rechts, darunter Ergebnis als Diagramm und Wochenkarten. */
 :root{
@@ -76,6 +76,8 @@ button:active{transform:translateY(1px)}
 button.primary{background:var(--acc);border-color:var(--acc);color:var(--acc-ink);font-size:17px;padding:0 28px}
 button.primary:hover{filter:brightness(1.06)}
 .err{color:var(--v3);font-weight:650}
+.goalinfo{color:var(--ink)!important;font-weight:650}
+.goalinfo:empty{display:none}
 
 /* Ergebnis */
 .result{margin-top:22px;display:grid;gap:18px}
@@ -108,7 +110,7 @@ button.primary:hover{filter:brightness(1.06)}
 .paces{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
 .pace{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:12px 14px;border-top:4px solid var(--g)}
 .pace span{display:block;font-size:13px;color:var(--dim)}
-.pace b{display:block;font-size:26px;letter-spacing:-.02em}
+.pace b{display:block;font-size:26px;letter-spacing:-.02em;white-space:nowrap}
 .pace small{color:var(--dim)}
 .pc-t{border-top-color:var(--a)}.pc-q{border-top-color:var(--v2)}.pc-z{border-top-color:var(--acc)}.pc-l{border-top-color:var(--t)}
 .weeks{display:grid;gap:10px}
@@ -162,15 +164,22 @@ footer p{margin:0;max-width:78ch}
     <svg viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="9" fill="var(--acc)"/><path d="M8 24 L26 24 M8 19 L26 19 M8 14 L26 14" stroke="var(--acc-ink)" stroke-width="2" stroke-linecap="round" opacity=".55"/><path d="M24 8 V26" stroke="var(--acc-ink)" stroke-width="3.4" stroke-linecap="round"/></svg>
     <span>Ziellinie</span>
   </div>
-  <h1>Dein Laufplan bis zur <em>Ziellinie</em>.</h1>
-  <p class="lead">Sag, wohin du willst und wann. Du bekommst einen Wochenplan mit Tempo für jeden Lauf und eine ehrliche Einschätzung, ob dein Ziel in der Zeit passt.</p>
-  <ul class="proof"><li>Kostenlos</li><li>Rechnet in deinem Browser</li><li>Kalender, Tabelle und Druck</li></ul>
+  <h1>Dein Trainingsplan bis zur <em>Ziellinie</em>.</h1>
+  <p class="lead">Laufen, Radfahren oder Schwimmen. Sag, wohin du willst und wann. Du bekommst einen Wochenplan mit Tempo für jede Einheit und eine ehrliche Einschätzung, ob dein Ziel in der Zeit passt.</p>
+  <ul class="proof"><li>Kostenlos</li><li>Laufen, Rad, Schwimmen</li><li>Rechnet in deinem Browser</li><li>Kalender, Tabelle und Druck</li></ul>
 </header>
 
 <form class="panel form noprint" id="form" onsubmit="return false">
   <div class="cols">
     <fieldset>
       <legend>Dein Ziel</legend>
+      <div class="field"><span>Sportart</span>
+        <div class="seg" role="radiogroup" aria-label="Sportart" id="sport">
+          <label><input type="radio" name="sport" value="lauf" checked><span>Laufen</span></label>
+          <label><input type="radio" name="sport" value="rad"><span>Radfahren</span></label>
+          <label><input type="radio" name="sport" value="schwimmen"><span>Schwimmen</span></label>
+        </div>
+      </div>
       <div class="field"><span>Strecke</span>
         <div class="seg" role="radiogroup" aria-label="Strecke" id="dist">
           <label><input type="radio" name="dist" value="5"><span>5 km</span></label>
@@ -179,15 +188,22 @@ footer p{margin:0;max-width:78ch}
           <label><input type="radio" name="dist" value="42"><span>Marathon</span></label>
         </div>
       </div>
-      <label class="field"><span>Zielzeit</span><input id="goal" type="text" inputmode="numeric" autocomplete="off" value="2:00:00" placeholder="z. B. 1:55:00 oder 1:55"><small>Stunden:Minuten:Sekunden. „1:55“ bei Halbmarathon heißt 1 Std 55 Min.</small></label>
-      <label class="field"><span>Wettkampftag oder Zieldatum</span><input id="race" type="date"><small>Kein Wettkampf? Nimm den Tag, an dem du die Strecke laufen willst.</small></label>
+      <div class="field" id="terrainBox" hidden><span>Gelände</span>
+        <div class="seg" role="radiogroup" aria-label="Gelände" id="terrain">
+          <label><input type="radio" name="terrain" value="flach" checked><span>flach</span></label>
+          <label><input type="radio" name="terrain" value="huegelig"><span>hügelig</span></label>
+          <label><input type="radio" name="terrain" value="bergig"><span>bergig</span></label>
+        </div>
+      </div>
+      <label class="field"><span>Zielzeit</span><input id="goal" type="text" inputmode="numeric" autocomplete="off" value="2:00:00" placeholder="z. B. 1:55:00 oder 1:55"><small id="goalHelp">Stunden:Minuten:Sekunden. „1:55“ bei Halbmarathon heißt 1 Std 55 Min.</small><small id="goalInfo" class="goalinfo" aria-live="polite"></small></label>
+      <label class="field"><span>Wettkampftag oder Zieldatum</span><input id="race" type="date"><small>Kein Wettkampf? Nimm den Tag, an dem du die Strecke schaffen willst.</small></label>
       <p class="hint" id="weeksHint" role="status">Trag ein Datum ein. Dann zähle ich die Wochen für dich und schreibe Daten in den Plan.</p>
       <label class="field" style="margin-top:12px"><span>Wochen bis dahin</span><input id="weeks" type="number" min="6" max="24" value="16" inputmode="numeric"><small>Ohne Datum gibst du die Wochen selbst an (6 bis 24).</small></label>
     </fieldset>
     <fieldset>
       <legend>Dein Stand</legend>
-      <div class="field"><span>Läufe pro Woche</span>
-        <div class="seg" role="radiogroup" aria-label="Läufe pro Woche" id="runs">
+      <div class="field"><span id="runsLabel">Läufe pro Woche</span>
+        <div class="seg" role="radiogroup" aria-label="Einheiten pro Woche" id="runs">
           <label><input type="radio" name="runs" value="3"><span>3</span></label>
           <label><input type="radio" name="runs" value="4" checked><span>4</span></label>
           <label><input type="radio" name="runs" value="5"><span>5</span></label>
@@ -195,10 +211,16 @@ footer p{margin:0;max-width:78ch}
       </div>
       <div class="field"><span>Heute pro Woche</span>
         <div class="range"><input id="curR" type="range" min="5" max="100" value="25" aria-label="Kilometer pro Woche heute"><input id="cur" type="number" min="5" max="120" value="25" inputmode="numeric" aria-label="Kilometer pro Woche"></div>
-        <small>Kilometer, die du in einer normalen Woche läufst.</small>
+        <small id="curHelp">Kilometer, die du in einer normalen Woche läufst.</small>
       </div>
+      <div id="refBox">
       <label class="field"><span>Letzte Bestzeit über (optional)</span><select id="refd"><option value="">keine Angabe</option><option value="5">5 km</option><option value="10">10 km</option><option value="21.0975">Halbmarathon</option><option value="42.195">Marathon</option></select></label>
       <label class="field"><span>Bestzeit (optional)</span><input id="reft" type="text" inputmode="numeric" autocomplete="off" placeholder="z. B. 50:00 oder 1:48:00"><small>Damit prüfe ich ehrlicher, ob dein Ziel passt.</small></label>
+      </div>
+      <div id="bikeBox" hidden>
+      <label class="field"><span>FTP in Watt (optional)</span><input id="ftp" type="number" min="60" max="500" inputmode="numeric" placeholder="z. B. 200"><small>Leistung, die du etwa eine Stunde halten kannst. Steht oft in Zwift, Garmin oder Wahoo. Damit bekommst du Watt-Bereiche und eine ehrlichere Einschätzung.</small></label>
+      <label class="field"><span>Körpergewicht in kg (optional)</span><input id="kg" type="number" min="40" max="150" inputmode="numeric" placeholder="ohne Angabe: 75"></label>
+      </div>
       <label class="field" id="kraftWrap" hidden><span>Kraft und Mobilität</span><select id="kraft"><option value="1" selected>ja, 2 Einheiten pro Woche</option><option value="0">nein</option></select></label>
     </fieldset>
   </div>
@@ -209,7 +231,7 @@ footer p{margin:0;max-width:78ch}
   <section class="panel summary" id="summary"></section>
   <div id="verdict"></div>
   <section class="panel block"><h2>Wochenumfang</h2><div id="chart"></div></section>
-  <section class="panel block"><h2>Dein Tempo</h2><div id="paces"></div></section>
+  <section class="panel block"><h2 id="pacesTitle">Dein Tempo</h2><div id="paces"></div></section>
   <section>
     <div class="tools noprint" style="margin-bottom:12px">
       <h2 style="font-size:20px;margin-right:auto">Dein Plan</h2>
@@ -236,7 +258,7 @@ footer p{margin:0;max-width:78ch}
 </footer>
 </div>
 
-<script src="plan.js?v=3"></script>
+<script src="plan.js?v=4"></script>
 <script>
 (function(){
   var $=function(i){return document.getElementById(i)}, last=null;
@@ -245,7 +267,7 @@ footer p{margin:0;max-width:78ch}
   function fmt(d){return ('0'+d.getDate()).slice(-2)+'.'+('0'+(d.getMonth()+1)).slice(-2)+'.'+d.getFullYear()}
   /* Kilometer: Regler und Zahlenfeld gleichhalten */
   $('curR').addEventListener('input',function(){$('cur').value=this.value});
-  $('cur').addEventListener('input',function(){var v=Math.max(5,Math.min(100,parseFloat(this.value)||5));$('curR').value=v});
+  $('cur').addEventListener('input',function(){var r=$('curR'),v=Math.max(+r.min,Math.min(+r.max,parseFloat(this.value)||+r.min));r.value=v});
   /* Wochen aus dem Datum */
   var hintDefault=$('weeksHint').textContent;
   function updWeeks(){
@@ -259,8 +281,44 @@ footer p{margin:0;max-width:78ch}
   }
   $('race').addEventListener('input',updWeeks);$('race').addEventListener('change',updWeeks);
 
+  /* Sportart: Laufen (wie bisher), Radfahren, Schwimmen. Felder passen sich an. */
+  var HELP={lauf:['z. B. 1:55:00 oder 1:55','Stunden:Minuten:Sekunden. „1:55“ bei Halbmarathon heißt 1 Std 55 Min.','Kilometer, die du in einer normalen Woche läufst.','Dein Tempo','Kilometer pro Woche heute'],
+    rad:['z. B. 4:00 oder 3:45:00','Stunden:Minuten. Daraus rechne ich deinen Schnitt in km/h.','Kilometer, die du in einer normalen Woche Rad fährst.','Deine Bereiche','Kilometer Rad pro Woche heute'],
+    schwimmen:['z. B. 35:00 oder 1:25:00','Minuten:Sekunden, bei langen Strecken Stunden:Minuten:Sekunden.','Kilometer, die du in einer normalen Woche schwimmst (1,5 heißt 1.500 m).','Dein Tempo pro 100 m','Kilometer Schwimmen pro Woche heute']};
+  var REFS={lauf:[['5','5 km'],['10','10 km'],['21.0975','Halbmarathon'],['42.195','Marathon']],schwimmen:[['0.4','400 m'],['0.75','750 m'],['1','1.000 m'],['1.5','1.500 m']]};
+  var goals={}, curSport='lauf';
+  function sport(){return val('sport')||'lauf'}
+  function seg(id,name,items,checked){$(id).innerHTML=items.map(function(it){return '<label><input type="radio" name="'+name+'" value="'+it[0]+'"'+(String(it[0])===String(checked)?' checked':'')+'><span>'+it[1]+'</span></label>'}).join('');}
+  function distKm(sp,d){return sp==='lauf'?Laufplan.DIST[d]:Laufplan.SPORTS[sp].D[d]}
+  function goalInfo(){
+    var sp=sport(),d=val('dist'),km=distKm(sp,d),g=Laufplan.parseTimeFor($('goal').value,km,sp==='lauf'?undefined:sp),t='';
+    if(g>0){t=sp==='rad'?'Schnitt '+(Math.round(km/(g/60)*10)/10).toString().replace('.',',')+' km/h':sp==='schwimmen'?'Tempo '+Laufplan.fmtPace(g*60/(km*10)).replace(' min/km',' min pro 100 m'):'Tempo '+Laufplan.fmtPace(g*60/km);}
+    $('goalInfo').textContent=t;
+  }
+  function setSport(sp){
+    goals[curSport]=$('goal').value; curSport=sp;
+    var I=Laufplan.sportInfo(sp),h=HELP[sp];
+    seg('dist','dist',I.dists,I.distDefault);
+    seg('runs','runs',I.sessions.map(function(n){return [n,n]}),I.sessDefault);
+    $('runsLabel').textContent=I.sessWord;
+    $('goal').placeholder=h[0];$('goalHelp').textContent=h[1];$('curHelp').textContent=h[2];$('pacesTitle').textContent=h[3];
+    $('curR').setAttribute('aria-label',h[4]);
+    $('goal').value=goals[sp]||I.goalDefault;
+    var c=I.cur;['curR','cur'].forEach(function(id){var e=$(id);e.min=c.min;e.max=id==='curR'?Math.min(c.max,sp==='rad'?400:sp==='schwimmen'?20:100):c.max;e.step=c.step;});
+    $('cur').value=c.def;$('curR').value=c.def;
+    $('terrainBox').hidden=sp!=='rad';$('bikeBox').hidden=sp!=='rad';$('refBox').hidden=sp==='rad';
+    if(REFS[sp]){$('refd').innerHTML='<option value="">keine Angabe</option>'+REFS[sp].map(function(r){return '<option value="'+r[0]+'">'+r[1]+'</option>'}).join('');$('reft').value='';$('reft').placeholder=sp==='schwimmen'?'z. B. 8:30 oder 25:00':'z. B. 50:00 oder 1:48:00';}
+    try{history.replaceState(null,'',location.pathname+location.search+(sp==='lauf'?'':'#'+sp));}catch(e){}
+    $('out').hidden=true;$('err').textContent='';
+    goalInfo();
+  }
+  $('sport').addEventListener('change',function(){setSport(sport())});
+  $('dist').addEventListener('change',goalInfo);$('goal').addEventListener('input',goalInfo);
+  (function(){var h=(location.hash||'').slice(1);if(h==='rad'||h==='schwimmen'){document.querySelector('input[name=sport][value='+h+']').checked=true;setSport(h);}else goalInfo();})();
+
   function make(){
     $('err').textContent='';
+    var sp=sport(); if(sp!=='lauf') return makeMulti(sp);
     var dist=val('dist'), goal=Laufplan.parseTimeFor($('goal').value,Laufplan.DIST[dist]);
     if(!(goal>0)){$('err').textContent='Bitte die Zielzeit eingeben, zum Beispiel 1:55:00, 1:55 (Stunden und Minuten) oder 25:30 (Minuten und Sekunden). Das Tempo muss zwischen 2:30 und 12:00 min/km liegen.';return;}
     var weeks=parseInt($('weeks').value,10), race=$('race').value;
@@ -270,14 +328,31 @@ footer p{margin:0;max-width:78ch}
     try{
       last=Laufplan.buildPlan({dist:dist,goalMin:goal,weeks:weeks,runs:val('runs'),curKm:$('cur').value,raceDate:race||null,ref:ref,interactive:true,kraft:!!window.LAUFPLAN_PRO&&$('kraft').value==='1'});
     }catch(e){$('err').textContent=e.message;return;}
-    var p=last;
-    $('summary').innerHTML='<div class="big">'+p.distName+' in '+Laufplan.fmtTime(p.goalMin)+'</div><span>'+p.weeks+' Wochen</span><span>'+p.runs+' Läufe pro Woche</span>'+(p.raceDate?'<span>Zieltag '+fmt(p.raceDate)+'</span>':'');
+    show(last);
+  }
+  function makeMulti(sp){
+    var dist=val('dist'), km=distKm(sp,dist), goal=Laufplan.parseTimeFor($('goal').value,km,sp);
+    if(!(goal>0)){$('err').textContent=sp==='rad'?'Bitte die Zielzeit eingeben, zum Beispiel 4:00 (Stunden und Minuten) oder 3:45:00. Der Schnitt muss zwischen 10 und 50 km/h liegen.':'Bitte die Zielzeit eingeben, zum Beispiel 35:00 (Minuten und Sekunden) oder 1:25:00. Das Tempo muss zwischen 0:55 und 4:00 min pro 100 m liegen.';return;}
+    var weeks=parseInt($('weeks').value,10), race=$('race').value;
+    if(race){var wu=Laufplan.weeksUntil(race);if(!wu||wu.weeks<6){$('err').textContent='Bis zu diesem Tag sind es weniger als 6 Wochen. Wähle einen späteren Tag oder lasse das Feld leer. Für kürzere Zeiträume ist ein Trainingsplan nicht sinnvoll.';return;}weeks=Math.min(24,wu.weeks);}
+    var ref=null;
+    if(sp==='schwimmen'){var rt=$('reft').value.trim();if($('refd').value&&rt){var rd=parseFloat($('refd').value),rm=Laufplan.parseTimeFor(rt,rd,sp);if(!(rm>0)){$('err').textContent='Bitte die Bestzeit eingeben, zum Beispiel 8:30 (Minuten und Sekunden).';return;}ref={d:rd,min:rm};}}
+    try{
+      last=Laufplan.buildPlan({sport:sp,dist:dist,goalMin:goal,weeks:weeks,runs:val('runs'),curKm:$('cur').value,raceDate:race||null,ref:ref,interactive:true,
+        ftp:sp==='rad'?parseFloat($('ftp').value)||null:null,weightKg:sp==='rad'?parseFloat($('kg').value)||null:null,terrain:val('terrain')||'flach',kraft:!!window.LAUFPLAN_PRO&&$('kraft').value==='1'});
+    }catch(e){$('err').textContent=e.message;return;}
+    show(last);
+  }
+  function show(p){
+    var sub=p.sport==='rad'?'Schnitt '+(Math.round(p.paces.ziel*10)/10).toString().replace('.',',')+' km/h':p.sport==='schwimmen'?Laufplan.fmtPace(p.paces.ziel).replace(' min/km',' pro 100 m'):'';
+    $('summary').innerHTML='<div class="big">'+p.distName+' in '+(p.sport==='rad'?Laufplan.fmtTime(p.goalMin).replace(/:00$/,'')+' Std':Laufplan.fmtTime(p.goalMin))+'</div>'+(sub?'<span>'+sub+'</span>':'')+'<span>'+p.weeks+' Wochen</span><span>'+p.runs+' '+(p.sessWord||'Läufe pro Woche')+'</span>'+(p.raceDate?'<span>Zieltag '+fmt(p.raceDate)+'</span>':'');
     $('verdict').innerHTML=Laufplan.renderVerdict(p);
     $('chart').innerHTML=Laufplan.renderChart(p);
     $('paces').innerHTML=Laufplan.renderPaces(p);
     $('weeksList').innerHTML=Laufplan.renderWeeks(p);
     $('toggle').textContent='Alle öffnen';
     $('out').hidden=false;
+    $('garmin').hidden=!(window.LAUFPLAN_PRO&&window.LaufplanFit)||!!p.sport;
     $('ics').disabled=!p.raceDate;$('ics').title=p.raceDate?'':'Dafür den Wettkampftag oder das Zieldatum eintragen';
     $('out').scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'start'});
   }
@@ -296,12 +371,12 @@ footer p{margin:0;max-width:78ch}
     var ds=document.querySelectorAll('#weeksList details'),open=this.textContent==='Alle öffnen';
     ds.forEach(function(d){d.open=open});this.textContent=open?'Alle schließen':'Alle öffnen';
   });
-  $('ics').addEventListener('click',function(){if(last&&last.raceDate)save('laufplan.ics','text/calendar',Laufplan.toICS(last));});
+  $('ics').addEventListener('click',function(){if(last&&last.raceDate)save((last.sport?'ziellinie-'+last.sport:'laufplan')+'.ics','text/calendar',Laufplan.toICS(last));});
   $('csv').addEventListener('click',function(){
-    if(!last)return;var rows=[['Woche','Phase','Datum','Tag','Einheit','Kilometer','Beschreibung']];
-    last.plan.forEach(function(w){w.sessions.forEach(function(s){rows.push([w.n,w.phase,s.date?s.date.toLocaleDateString('de-DE'):'',s.day,s.type,String(s.km).replace('.',','),s.desc]);});});
+    if(!last)return;var ms=!!last.sport,rows=[['Woche','Phase','Datum','Tag','Einheit',ms?'Umfang':'Kilometer','Beschreibung']];
+    last.plan.forEach(function(w){w.sessions.forEach(function(s){rows.push([w.n,w.phase,s.date?s.date.toLocaleDateString('de-DE'):'',s.day,ms?s.chip[1]:s.type,ms?s.amount:String(s.km).replace('.',','),s.desc]);});});
     var csv='﻿'+rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"'}).join(';')}).join('\r\n');
-    save('laufplan.csv','text/csv',csv);
+    save((ms?'ziellinie-'+last.sport:'laufplan')+'.csv','text/csv',csv);
   });
   $('print').addEventListener('click',function(){document.querySelectorAll('#weeksList details').forEach(function(d){d.open=true});window.print();});
 })();
